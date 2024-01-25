@@ -30,41 +30,33 @@ from .serializers import (
     RecipeReadSerializer,
     RecipeWriteSerializer,
     RecipeForExtraActionsSerializer,
-    SubscriptionsSerializer,
+    FollowSerializer,
 )
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .filters import RecipeFilter, IngredientFilter
+from .mixins import TagIngredientMixin, DelIntermediateObjMixin
 
 User = get_user_model()
 
-APPLY_METHODS = (
-    'get',
-)
 
-
-class IngredientViewSet(ModelViewSet):
+class IngredientViewSet(TagIngredientMixin):
     '''Вывод ингредиентов.'''
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (IsAuthorOrAdminOrReadOnly,)
-    pagination_class = None
-    http_method_names = APPLY_METHODS
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
 
 
-class TagViewSet(ModelViewSet):
+class TagViewSet(TagIngredientMixin):
     '''Вывод тегов.'''
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAuthorOrAdminOrReadOnly,)
-    pagination_class = None
-    http_method_names = APPLY_METHODS
 
-class RecipeViewSet(ModelViewSet):
-    """Вывод произведений."""
+
+class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
+    """Вывод рецептов и корзины покупок."""
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
@@ -77,8 +69,8 @@ class RecipeViewSet(ModelViewSet):
             return RecipeWriteSerializer
         return RecipeReadSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    # def perform_create(self, serializer):
+    #     serializer.save(author=self.request.user)
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
@@ -95,35 +87,29 @@ class RecipeViewSet(ModelViewSet):
             return queryset
         return Recipe.objects.all()
 
-    def add_or_del_recipe(self, request, pk, model):
+    def add_recipe(self, request, pk, model):
+        """Добавляет рецепт в избранное или в корзину покупок."""
         queryset = self.get_queryset()
-        if request.method == 'POST':
-            try:
-                recipe = queryset.get(pk=pk)
-            except queryset.model.DoesNotExist:
-                raise ValidationError('Рецепт не существует!')
-            if model.objects.filter(user=request.user,  recipe=recipe):
-                raise ValidationError(f'Рецепт уже добавлен в {model._meta.verbose_name}!')
+        try:
+            recipe = queryset.get(pk=pk)
+        except queryset.model.DoesNotExist:
+            raise ValidationError('Рецепт не существует!')
+        if model.objects.filter(user=request.user, recipe=recipe):
+            raise ValidationError(
+                f'Рецепт уже добавлен в {model._meta.verbose_name}!'
+            )
+        model.objects.create(user=request.user, recipe=recipe)
+        serializer = RecipeForExtraActionsSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            model.objects.create(
-                user=request.user, recipe=recipe
-            )
-            serializer = RecipeForExtraActionsSerializer(
-                recipe,
-            )
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
+    def add_or_del_recipe(self, request, pk, model):
+        """Добавляет или удаляет рецепт в избранное или список покупок."""
+        if request.method == 'POST':
+            return self.add_recipe(request, pk, model)
         elif request.method == 'DELETE':
-            recipe = get_object_or_404(Recipe, pk=pk)
-            queryset_objs = model.objects.all()
-            try:
-                obj = queryset_objs.get(user=request.user, recipe=recipe.id)
-            except queryset_objs.model.DoesNotExist:
-                raise ValidationError(f'Рецепт не добавлен в {model._meta.verbose_name}')
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            get_object_or_404(Recipe, pk=pk)
+            return self.del_intermediate_obj(request, pk, model)
+
 
     @action(
         detail=True,
@@ -154,6 +140,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def download_shopping_cart(self, request):
+        """Формирует список покупок и возвращает txt файл в ответе."""
         shopping_cart = self.queryset.filter(
             shopingcart__user=self.request.user
         ).values('ingredients__name', 'ingredients__measurement_unit'
@@ -171,13 +158,13 @@ class RecipeViewSet(ModelViewSet):
         return HttpResponse(
             content,
             headers={
-                'Content-Type': 'text/plain',
-                'Content-Disposition': 'attachment; filename="shopping_cart.txt"',
+            'Content-Type': 'text/plain',
+            'Content-Disposition': 'attachment; filename="shopping_cart.txt"',
             }
         )
 
 
-class UserCustomViewSet(UserViewSet):
+class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -189,6 +176,26 @@ class UserCustomViewSet(UserViewSet):
                 )))
             return queryset
         return User.objects.all()
+
+    def add_subscribe(self, request, id, following):
+        """Добавляет подписку."""
+        if request.user == following:
+            raise ValidationError('Нельзя подписаться на себя!')
+        if Follow.objects.filter(user=request.user, following=following):
+            raise ValidationError('Нельзя дважды подписаться на одного блогера!')
+
+        Follow.objects.create(
+            user=request.user, following=following
+        )
+        following=User.objects.filter(pk=id).annotate(
+            is_subscribed=Exists(Follow.objects.filter(
+                following=OuterRef('pk'),
+                user=request.user
+            )))[0]
+        serializer = FollowSerializer(
+            following, context={'request': request})
+        return Response(serializer.data,
+                status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
@@ -213,14 +220,15 @@ class UserCustomViewSet(UserViewSet):
                 ))).filter(following__user=self.request.user)
         page = self.paginate_queryset(followings)
         if page is not None:
-            serializer = SubscriptionsSerializer(page, context={'request': request}, many=True)
+            serializer = FollowSerializer(
+                page, context={'request': request}, many=True
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = SubscriptionsSerializer(followings, context={'request': request},  many=True)
+        serializer = FollowSerializer(
+            followings, context={'request': request},  many=True
+        )
         return Response(serializer.data)
-
-    def chek_exist(self, request, id, model):
-        pass
 
     @action(
         detail=True,
@@ -231,29 +239,8 @@ class UserCustomViewSet(UserViewSet):
     def subscribe(self, request, id):
         following = get_object_or_404(User, pk=id)
         if request.method == 'POST':
-            if self.request.user == following:
-                raise ValidationError('Нельзя подписаться на себя!')
-            if Follow.objects.filter(user=request.user, following=following):
-                raise ValidationError('Нельзя дважды подписаться на одного блогера!')
+            return self.add_subscribe(request, id, following)
+        return self.del_intermediate_obj(request, id, Follow)
 
-            Follow.objects.create(
-                user=request.user, following=following
-            )
-            following=User.objects.filter(pk=id).annotate(
-                is_subscribed=Exists(Follow.objects.filter(
-                    following=OuterRef('pk'),
-                    user=self.request.user
-                )))[0]
-            serializer = SubscriptionsSerializer(
-                following, context={'request': request})
-            return Response(serializer.data,
-                    status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            queryset_objs = Follow.objects.all()
-            try:
-                obj = queryset_objs.get(following=id, user=request.user)
-            except queryset_objs.model.DoesNotExist:
-                raise ValidationError(f'Автор не добавлен в {Follow._meta.verbose_name}')
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+
 
