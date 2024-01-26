@@ -41,7 +41,7 @@ class Recipe(models.Model):
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='reviews',
+        related_name='recipes',
     )
     tags = models.ManyToManyField(
         Tag,
@@ -65,7 +65,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name='Фото',
-        upload_to='cats/images/',
+        upload_to='recipes/images/',
     )
     created = models.DateTimeField(
         'Дата добавления',
@@ -92,7 +92,7 @@ class IngredientInRecipe(models.Model):
         Recipe,
         verbose_name='Рецепт',
         on_delete=models.CASCADE,
-        related_name='recipe_ingredient'
+        related_name='recipeingredients'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество'

@@ -65,7 +65,7 @@ class RecipeIngredientSerializer(ModelSerializer):
         model = IngredientInRecipe
 
 class AddIngredientToRecipeSerializer(ModelSerializer):
-    """Запись игнредиентов в рецепт."""
+    """Добавление игнредиентов в рецепт."""
     id = IntegerField()
     amount = IntegerField()
 
@@ -80,7 +80,6 @@ class AddIngredientToRecipeSerializer(ModelSerializer):
 
 
 class UserSerializer(ModelSerializer):
-    """Вывод данных пользователя"""
     is_subscribed = BooleanField(read_only=True, default=False)
 
     class Meta:
@@ -101,8 +100,9 @@ class UserSerializer(ModelSerializer):
 
 
 class FollowSerializer(UserSerializer):
+    """Вывод подписок пользователя."""
     recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
+    recipes_count = IntegerField()
 
     class Meta:
         fields = (
@@ -119,12 +119,7 @@ class FollowSerializer(UserSerializer):
 
 
     def get_recipes_queryset(self, obj):
-        # Добавить это в аннотацию и кверисет
         return Recipe.objects.filter(author=obj)
-
-    def get_recipes_count(self, obj):
-        # Добавить это в аннотацию и кверисет
-        return self.get_recipes_queryset(obj).count()
 
     def get_recipes(self, obj):
         try:
@@ -138,7 +133,7 @@ class FollowSerializer(UserSerializer):
 
 
 class RecipeForExtraActionsSerializer(ModelSerializer):
-    image = Base64ImageField(required=False, allow_null=True)
+    """Отображение рецепта при подписке и добавлении в избранное."""
 
     class Meta:
         fields = (
@@ -151,10 +146,11 @@ class RecipeForExtraActionsSerializer(ModelSerializer):
 
 
 class RecipeReadSerializer(ModelSerializer):
+    """Отображение рецепта с дополнительными полями."""
     tags = TagSerializer(read_only=True, many=True)
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, source="recipe_ingredient"
+        many=True, source="recipeingredients"
     )
     is_favorited = BooleanField(read_only=True, default=False)
     is_in_shopping_cart = BooleanField(read_only=True, default=False)

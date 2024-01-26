@@ -9,3 +9,10 @@ class IsAuthorOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
                 or request.user.is_staff)
 
 
+class CurrentUserOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if obj == user:
+            return True
+        return request.method in permissions.SAFE_METHODS or user.is_staff
+

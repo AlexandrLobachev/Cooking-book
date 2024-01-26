@@ -2,15 +2,15 @@ import io
 
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum
-from django.db.models import Exists, OuterRef, Subquery
+from django.db.models import Sum, Count
+from django.db.models import Exists, OuterRef
 from djoser.views import UserViewSet
 from rest_framework.serializers import ValidationError
 
@@ -69,12 +69,11 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
             return RecipeWriteSerializer
         return RecipeReadSerializer
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author=self.request.user)
-
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = Recipe.objects.annotate(
+            queryset = Recipe.objects.select_related('author'
+                ).prefetch_related('tags', 'recipeingredients__ingredient'
+                ).annotate(
                 is_favorited=Exists(Favorite.objects.filter(
                     recipe=OuterRef('pk'),
                     user=self.request.user,
@@ -144,14 +143,14 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
         shopping_cart = self.queryset.filter(
             shopingcart__user=self.request.user
         ).values('ingredients__name', 'ingredients__measurement_unit'
-        ).annotate(Sum('recipe_ingredient__amount'))
+        ).annotate(Sum('recipeingredients__amount'))
         out = io.StringIO()
         out.write('Список покупок:'"\n")
         for row in list(shopping_cart):
             out.write(
                 f'\n{row.get("ingredients__name").capitalize()} '
                 f'({row.get("ingredients__measurement_unit")}) - '
-                f'{row.get("recipe_ingredient__amount__sum")}'
+                f'{row.get("recipeingredients__amount__sum")}'
             )
         content = out.getvalue()
         out.close()
@@ -177,21 +176,28 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
             return queryset
         return User.objects.all()
 
+    def get_followings(self, request):
+        return User.objects.prefetch_related(
+            'recipes').annotate(
+            is_subscribed=Exists(Follow.objects.filter(
+                following=OuterRef('pk'),
+                user=request.user
+            )),
+            recipes_count=Count('recipes'))
+
+
     def add_subscribe(self, request, id, following):
         """Добавляет подписку."""
         if request.user == following:
             raise ValidationError('Нельзя подписаться на себя!')
         if Follow.objects.filter(user=request.user, following=following):
-            raise ValidationError('Нельзя дважды подписаться на одного блогера!')
+            raise ValidationError(
+                'Нельзя дважды подписаться на одного блогера!')
 
         Follow.objects.create(
             user=request.user, following=following
         )
-        following=User.objects.filter(pk=id).annotate(
-            is_subscribed=Exists(Follow.objects.filter(
-                following=OuterRef('pk'),
-                user=request.user
-            )))[0]
+        following = self.get_followings(request).filter(pk=id)[0]
         serializer = FollowSerializer(
             following, context={'request': request})
         return Response(serializer.data,
@@ -213,11 +219,8 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
     )
 
     def subscriptions(self, request):
-        followings = User.objects.annotate(
-                is_subscribed=Exists(Follow.objects.filter(
-                    following=OuterRef('pk'),
-                    user=self.request.user,
-                ))).filter(following__user=self.request.user)
+        followings = self.get_followings(request).filter(
+            following__user=self.request.user)
         page = self.paginate_queryset(followings)
         if page is not None:
             serializer = FollowSerializer(
