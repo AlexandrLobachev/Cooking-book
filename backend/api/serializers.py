@@ -99,6 +99,19 @@ class UserSerializer(ModelSerializer):
         return User.objects.create_user(**validated_data)
 
 
+class RecipeForExtraActionsSerializer(ModelSerializer):
+    """Отображение рецепта при подписке и добавлении в избранное."""
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
+        model = Recipe
+
+
 class FollowSerializer(UserSerializer):
     """Вывод подписок пользователя."""
     recipes = SerializerMethodField()
@@ -117,10 +130,6 @@ class FollowSerializer(UserSerializer):
         )
         model = User
 
-
-    def get_recipes_queryset(self, obj):
-        return Recipe.objects.filter(author=obj)
-
     def get_recipes(self, obj):
         try:
             query_params = self.context.get('request').query_params
@@ -128,21 +137,8 @@ class FollowSerializer(UserSerializer):
         except:
             recipes_limit = None
         return RecipeForExtraActionsSerializer(
-            self.get_recipes_queryset(obj)[:recipes_limit],
+            obj.recipes.all()[:recipes_limit],
             many=True).data
-
-
-class RecipeForExtraActionsSerializer(ModelSerializer):
-    """Отображение рецепта при подписке и добавлении в избранное."""
-
-    class Meta:
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time',
-        )
-        model = Recipe
 
 
 class RecipeReadSerializer(ModelSerializer):
