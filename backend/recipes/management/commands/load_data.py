@@ -8,8 +8,8 @@ from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
-    help = 'Поместите файлы в директорию static/data/'
-    directory_path = r'static/data/'
+    help = 'Поместите файлы в директорию static/load_data/'
+    directory_path = r'static/load_data/'
 
     def create_ingredient(self, dict):
         """Создает объект класса Ingredient."""
@@ -46,7 +46,9 @@ class Command(BaseCommand):
                 ))
 
     def add_arguments(self, parser):
-        parser.add_argument('type_file', type=str, help='Введите тип расширения файла csv или json.')
+        parser.add_argument('type_file', type=str,
+                            help='Введите тип расширения файла csv или json.'
+                                 'Например load_data csv')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -57,7 +59,8 @@ class Command(BaseCommand):
         elif type_file == 'csv':
             list_of_dicts = self.csv_to_dicts(file)
         else:
-            self.stdout.write('Введен некоректный тип расширения файла. Только csv или json.')
+            self.stdout.write(
+                'Введен некоректный тип расширения файла. Только csv или json.')
             exit()
         self.iterator(list_of_dicts)
         self.stdout.write(self.style.SUCCESS('Импорт завершен!'))

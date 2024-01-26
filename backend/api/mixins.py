@@ -1,5 +1,4 @@
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
