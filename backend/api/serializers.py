@@ -150,6 +150,7 @@ class RecipeReadSerializer(ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True, source="recipeingredients"
     )
+    image = SerializerMethodField(read_only=True)
     is_favorited = BooleanField(read_only=True, default=False)
     is_in_shopping_cart = BooleanField(read_only=True, default=False)
 
@@ -167,6 +168,11 @@ class RecipeReadSerializer(ModelSerializer):
             'is_in_shopping_cart',
         )
         model = Recipe
+
+        def get_image(self, obj):
+            if obj.image:
+                return obj.image.url
+            return None
 
 
 class RecipeWriteSerializer(ModelSerializer):
