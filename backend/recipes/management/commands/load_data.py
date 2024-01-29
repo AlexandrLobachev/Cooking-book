@@ -8,7 +8,7 @@ from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
-    help = 'Поместите файлы в директорию static/load_data/'
+    help = 'Поместите файлы в директорию static/data/'
     directory_path = r'static/data/'
 
     def create_ingredient(self, dict):
