@@ -66,4 +66,3 @@ docker compose -f docker-compose.yml exec backend python manage.py load_data csv
 ```
 http://localhost/
 ```
-
