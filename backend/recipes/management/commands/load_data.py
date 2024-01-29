@@ -9,7 +9,7 @@ from recipes.models import Ingredient
 
 class Command(BaseCommand):
     help = 'Поместите файлы в директорию static/load_data/'
-    directory_path = r'static/load_data/'
+    directory_path = r'static/data/'
 
     def create_ingredient(self, dict):
         """Создает объект класса Ingredient."""
