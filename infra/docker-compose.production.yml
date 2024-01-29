@@ -14,6 +14,7 @@ services:
   backend:
     depends_on:
       - db
+    image: alexandrlobachev/foodgram_backend
     build:
       context: ../backend/
       dockerfile: Dockerfile
@@ -23,6 +24,7 @@ services:
       - media:/media
   frontend:
     env_file: .env
+    image: alexandrlobachev/foodgram_frontend
     build:
       context: ../frontend
       dockerfile: Dockerfile
@@ -32,10 +34,11 @@ services:
   nginx:
     depends_on:
       - backend
+    image: alexandrlobachev/foodgram_gateway
     image: nginx:1.19.3
     env_file: .env
     ports:
-      - 80:80
+      - 9000:80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
