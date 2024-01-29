@@ -169,10 +169,10 @@ class RecipeReadSerializer(ModelSerializer):
         )
         model = Recipe
 
-        def get_image(self, obj):
-            if obj.image:
-                return obj.image.url
-            return None
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 
 class RecipeWriteSerializer(ModelSerializer):
