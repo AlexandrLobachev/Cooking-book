@@ -71,9 +71,9 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = Recipe.objects.select_related('author'
-                ).prefetch_related('tags', 'recipeingredients__ingredient'
-                ).annotate(
+            queryset = Recipe.objects.select_related(
+                'author').prefetch_related(
+                'tags', 'recipeingredients__ingredient').annotate(
                 is_favorited=Exists(Favorite.objects.filter(
                     recipe=OuterRef('pk'),
                     user=self.request.user,
@@ -133,16 +133,16 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
 
     @action(
         detail=False,
-        methods=['get',],
+        methods=['get', ],
         url_path='download_shopping_cart',
         permission_classes=[IsAuthenticated, ]
     )
     def download_shopping_cart(self, request):
         """Формирует список покупок и возвращает txt файл в ответе."""
         shopping_cart = IngredientInRecipe.objects.filter(
-            recipe__shopingcart__user=self.request.user
-        ).values('ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(Sum('amount'))
+            recipe__shopingcart__user=self.request.user).values(
+            'ingredient__name', 'ingredient__measurement_unit').annotate(
+            Sum('amount'))
         out = io.StringIO()
         out.write('Список покупок:'"\n")
         for row in list(shopping_cart):

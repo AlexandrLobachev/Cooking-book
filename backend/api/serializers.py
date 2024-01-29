@@ -136,7 +136,7 @@ class FollowSerializer(UserSerializer):
         try:
             query_params = self.context.get('request').query_params
             recipes_limit = int(query_params.get('recipes_limit'))
-        except:
+        except TypeError:
             recipes_limit = None
         return RecipeForExtraActionsSerializer(
             obj.recipes.all()[:recipes_limit],
