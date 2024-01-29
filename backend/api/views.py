@@ -22,6 +22,7 @@ from recipes.models import (
     Recipe,
     Favorite,
     ShopingCart,
+    IngredientInRecipe,
 )
 from .serializers import (
     IngredientSerializer,
@@ -140,17 +141,17 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
     )
     def download_shopping_cart(self, request):
         """Формирует список покупок и возвращает txt файл в ответе."""
-        shopping_cart = self.queryset.filter(
-            shopingcart__user=self.request.user
-        ).values('ingredients__name', 'ingredients__measurement_unit'
-        ).annotate(Sum('recipeingredients__amount'))
+        shopping_cart = IngredientInRecipe.objects.filter(
+            recipe__shopingcart__user=self.request.user
+        ).values('ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(Sum('amount'))
         out = io.StringIO()
         out.write('Список покупок:'"\n")
         for row in list(shopping_cart):
             out.write(
-                f'\n{row.get("ingredients__name").capitalize()} '
-                f'({row.get("ingredients__measurement_unit")}) - '
-                f'{row.get("recipeingredients__amount__sum")}'
+                f'\n{row.get("ingredient__name").capitalize()} '
+                f'({row.get("ingredient__measurement_unit")}) - '
+                f'{row.get("amount__sum")}'
             )
         content = out.getvalue()
         out.close()
