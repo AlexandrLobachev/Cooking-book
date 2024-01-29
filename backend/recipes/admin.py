@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import (
     Recipe,
     Ingredient,
@@ -7,6 +8,7 @@ from .models import (
     ShopingCart,
 )
 
+
 class IngredientInRecipeInline(admin.TabularInline):
     model = Recipe.ingredients.through
     extra = 0
@@ -14,6 +16,7 @@ class IngredientInRecipeInline(admin.TabularInline):
         'ingredient',
         'amount',
     )
+
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -27,7 +30,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
         'tags',
-                   )
+    )
     search_fields = (
         'id',
         'name',
@@ -46,9 +49,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'favorite_count'
     )
     readonly_fields = ('id', 'favorite_count', 'created',)
-    inlines = (
-     IngredientInRecipeInline,
-    )
+    inlines = (IngredientInRecipeInline,)
 
     def favorite_count(self, instance):
         return instance.favorite_set.count()
@@ -71,23 +72,12 @@ class ShoppingCartInline(admin.TabularInline):
     )
 
 
-# class UserAdmin(DjangoUserAdmin):
-#     model = User
-#     list_filter = (
-#         'username',
-#         'email',
-#     )
-#     inlines = (
-#         FavoriteInline,
-#         ShoppingCartInline,
-#     )
-
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     model = Tag
-    list_display = ('id','name', 'color', 'slug')
+    list_display = ('id', 'name', 'color', 'slug')
     list_display_links = ('name',)
-    fields = ('id','name', 'color', 'slug')
+    fields = ('id', 'name', 'color', 'slug')
     readonly_fields = ('id',)
 
 
@@ -102,11 +92,3 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name', 'id')
     fields = ('id', 'name', 'measurement_unit',)
     readonly_fields = ('id',)
-
-
-
-
-
-# admin.site.register(Recipe, RecipeAdmin)
-# admin.site.register(Ingredient, IngredientAdmin)
-# admin.site.register(Tag, TagAdmin)

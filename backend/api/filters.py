@@ -20,7 +20,7 @@ class RecipeFilter(FilterSet):
         if self.request.user.is_authenticated:
             return queryset.filter(**{name: value})
         elif value is True and not self.request.user.is_authenticated:
-             return Recipe.objects.none()
+            return Recipe.objects.none()
         else:
             return queryset
 

@@ -65,7 +65,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: alexandrlobachev/kittygram_backend:latest
+          tags: alexandrlobachev/foodgram_backend:latest
 
   frontend_tests:
     runs-on: ubuntu-latest
@@ -106,7 +106,7 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: alexandrlobachev/kittygram_frontend:latest
+          tags: alexandrlobachev/foodgram_frontend:latest
 
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
@@ -127,7 +127,7 @@ jobs:
         with:
           context: ./nginx/
           push: true
-          tags: alexandrlobachev/kittygram_gateway:latest
+          tags: alexandrlobachev/foodgram_gateway:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -146,7 +146,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
-        target: "kittygram"
+        target: "foodgram"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
@@ -155,7 +155,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          cd kittygram
+          cd foodgram
           # Выполняет pull образов с Docker Hub
           sudo docker compose -f docker-compose.production.yml pull
           # Перезапускает все контейнеры в Docker Compose
@@ -175,4 +175,4 @@ jobs:
       with:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: Деплой Kittygram успешно выполнен! Инициатор ${{ github.actor }}, сообщение ${{ github.event.commits[0].message }}.
+        message: Деплой foodgram успешно выполнен! Инициатор ${{ github.actor }}, сообщение ${{ github.event.commits[0].message }}.

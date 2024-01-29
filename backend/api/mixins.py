@@ -7,6 +7,7 @@ from rest_framework.serializers import ValidationError
 
 from users.models import Follow
 from recipes.models import Favorite, ShopingCart
+
 from .permissions import IsAuthorOrAdminOrReadOnly
 
 User = get_user_model()
@@ -15,10 +16,10 @@ User = get_user_model()
 class DelIntermediateObjMixin():
 
     def del_intermediate_obj(self, request, pk, model):
-        args_for_obj={
-            Favorite: {'user':request.user, 'recipe':pk},
-            ShopingCart: {'user':request.user, 'recipe':pk},
-            Follow: {'user':request.user, 'following':pk},
+        args_for_obj = {
+            Favorite: {'user': request.user, 'recipe': pk},
+            ShopingCart: {'user': request.user, 'recipe': pk},
+            Follow: {'user': request.user, 'following': pk},
         }
         messages = {
             Favorite: 'Рецепт отсутствует в избранном!',

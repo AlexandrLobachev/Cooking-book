@@ -32,7 +32,6 @@ class Command(BaseCommand):
                 list_of_dicts.append(dict)
             return list_of_dicts
 
-
     def iterator(self, list_of_dicts: list[dict]):
         """Перебирает список словарей и передает их для создания объектов."""
         import_counter = 0
@@ -41,9 +40,9 @@ class Command(BaseCommand):
             import_counter += 1
 
         self.stdout.write(
-                self.style.SUCCESS(
-                    f'Импортировано {import_counter} объектов.'
-                ))
+            self.style.SUCCESS(
+                f'Импортировано {import_counter} объектов.'
+            ))
 
     def add_arguments(self, parser):
         parser.add_argument('type_file', type=str,
@@ -60,7 +59,7 @@ class Command(BaseCommand):
             list_of_dicts = self.csv_to_dicts(file)
         else:
             self.stdout.write(
-                'Введен некоректный тип расширения файла. Только csv или json.')
+                'Введен некоректный тип расширения. Только csv или json.')
             exit()
         self.iterator(list_of_dicts)
         self.stdout.write(self.style.SUCCESS('Импорт завершен!'))

@@ -5,8 +5,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-
-
 class Tag(models.Model):
     name = models.CharField('Тег', max_length=20)
     color = models.CharField('Цвет тега', max_length=16)
@@ -22,11 +20,12 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+
 class Ingredient(models.Model):
     name = models.CharField('Ингредиент', max_length=150)
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length = 150
+        max_length=150
     )
 
     class Meta:
@@ -35,6 +34,7 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return f'{self.name}({self.measurement_unit})'
+
 
 class Recipe(models.Model):
     author = models.ForeignKey(
@@ -82,6 +82,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+
 class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
@@ -124,6 +125,7 @@ class UserRecipeModel(models.Model):
     def __str__(self):
         return self.recipe.name
 
+
 class Favorite(UserRecipeModel):
 
     class Meta:
@@ -135,7 +137,6 @@ class Favorite(UserRecipeModel):
             )]
 
 
-
 class ShopingCart(UserRecipeModel):
 
     class Meta:
@@ -145,4 +146,3 @@ class ShopingCart(UserRecipeModel):
             models.UniqueConstraint(
                 fields=['recipe', 'user'], name='unique_shopping_cart',
             )]
-

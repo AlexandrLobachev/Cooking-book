@@ -6,8 +6,8 @@ from recipes.admin import (
     FavoriteInline,
     ShoppingCartInline
 )
-
 from .models import Follow
+
 
 User = get_user_model()
 
@@ -19,6 +19,7 @@ class FollowInline(admin.TabularInline):
     fields = (
         'following',
     )
+
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
@@ -32,7 +33,3 @@ class UserAdmin(DjangoUserAdmin):
         ShoppingCartInline,
         FollowInline
     )
-
-
-# admin.site.register(User, UserAdmin)
-

@@ -23,6 +23,7 @@ from recipes.models import (
     IngredientInRecipe,
 )
 
+
 User = get_user_model()
 
 
@@ -63,6 +64,7 @@ class RecipeIngredientSerializer(ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'measurement_unit', 'amount',)
         model = IngredientInRecipe
+
 
 class AddIngredientToRecipeSerializer(ModelSerializer):
     """Добавление игнредиентов в рецепт."""
@@ -196,7 +198,7 @@ class RecipeWriteSerializer(ModelSerializer):
                 queryset=Recipe.objects.all(),
                 fields=('author', 'name', 'text'),
                 message=(
-                'Вы уже публиковали рецепт с таким названием и описанием!'
+                    'Вы уже публиковали рецепт с таким названием и описанием!'
                 )
             )
         ]
@@ -250,15 +252,15 @@ class RecipeWriteSerializer(ModelSerializer):
             data.get('cooking_time'))
         return data
 
-    def add_ingredients_to_recipe(self,recipe, ingredients):
+    def add_ingredients_to_recipe(self, recipe, ingredients):
         for ingredient in ingredients:
             IngredientInRecipe.objects.create(
                 ingredient_id=ingredient.get('id'),
                 amount=ingredient.get('amount'),
-                recipe=recipe
+                recipe=recipe,
             )
 
-    def add_tags_to_recipe(self,recipe, tags):
+    def add_tags_to_recipe(self, recipe, tags):
         recipe.tags.set(tags)
 
     def create(self, validated_data):
@@ -284,5 +286,3 @@ class RecipeWriteSerializer(ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance).data
-
-

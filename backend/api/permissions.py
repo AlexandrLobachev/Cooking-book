@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsAuthorOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     """Доступ на редактирование только для автора или админа."""
 
@@ -15,4 +16,3 @@ class CurrentUserOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
         if obj == user:
             return True
         return request.method in permissions.SAFE_METHODS or user.is_staff
-

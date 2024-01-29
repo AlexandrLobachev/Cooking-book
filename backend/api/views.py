@@ -15,7 +15,6 @@ from djoser.views import UserViewSet
 from rest_framework.serializers import ValidationError
 
 from users.models import Follow
-
 from recipes.models import (
     Ingredient,
     Tag,
@@ -24,6 +23,7 @@ from recipes.models import (
     ShopingCart,
     IngredientInRecipe,
 )
+from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (
     IngredientSerializer,
     TagSerializer,
@@ -33,7 +33,6 @@ from .serializers import (
     RecipeForExtraActionsSerializer,
     FollowSerializer,
 )
-from .permissions import IsAuthorOrAdminOrReadOnly
 from .filters import RecipeFilter, IngredientFilter
 from .mixins import TagIngredientMixin, DelIntermediateObjMixin
 
@@ -110,7 +109,6 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
             get_object_or_404(Recipe, pk=pk)
             return self.del_intermediate_obj(request, pk, model)
 
-
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -158,8 +156,9 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
         return HttpResponse(
             content,
             headers={
-            'Content-Type': 'text/plain',
-            'Content-Disposition': 'attachment; filename="shopping_cart.txt"',
+                'Content-Type': 'text/plain',
+                'Content-Disposition': 'attachment;'
+                                       'filename="shopping_cart.txt"',
             }
         )
 
@@ -186,7 +185,6 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
             )),
             recipes_count=Count('recipes'))
 
-
     def add_subscribe(self, request, id, following):
         """Добавляет подписку."""
         if request.user == following:
@@ -202,14 +200,13 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
         serializer = FollowSerializer(
             following, context={'request': request})
         return Response(serializer.data,
-                status=status.HTTP_201_CREATED)
+                        status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
         methods=('get',),
         permission_classes=(IsAuthenticated,),
     )
-
     def me(self, request):
         return super().me(request)
 
@@ -218,7 +215,6 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
         methods=('get',),
         permission_classes=(IsAuthenticated,),
     )
-
     def subscriptions(self, request):
         followings = self.get_followings(request).filter(
             following__user=self.request.user)
@@ -230,7 +226,7 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
             return self.get_paginated_response(serializer.data)
 
         serializer = FollowSerializer(
-            followings, context={'request': request},  many=True
+            followings, context={'request': request}, many=True
         )
         return Response(serializer.data)
 
@@ -239,12 +235,8 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
         methods=('post', 'delete'),
         permission_classes=(IsAuthenticated,),
     )
-
     def subscribe(self, request, id):
         following = get_object_or_404(User, pk=id)
         if request.method == 'POST':
             return self.add_subscribe(request, id, following)
         return self.del_intermediate_obj(request, id, Follow)
-
-
-
