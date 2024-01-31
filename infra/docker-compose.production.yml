@@ -21,8 +21,9 @@ services:
       - media:/app/media
   frontend:
     image: alexandrlobachev/foodgram_frontend
+    command: cp -r /app/build/. /app/result_build/
     volumes:
-      - static:/app/result_build/
+      - static:/app/result_build
   nginx:
     depends_on:
       - backend
@@ -31,7 +32,6 @@ services:
     ports:
       - 9000:80
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - media:/media/
       - static:/static/
