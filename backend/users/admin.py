@@ -33,3 +33,8 @@ class UserAdmin(DjangoUserAdmin):
         ShoppingCartInline,
         FollowInline
     )
+
+
+@admin.register(Follow)
+class ShopingCartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'following',)

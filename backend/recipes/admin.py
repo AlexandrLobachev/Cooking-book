@@ -6,6 +6,7 @@ from .models import (
     Tag,
     Favorite,
     ShopingCart,
+    IngredientInRecipe
 )
 
 
@@ -92,3 +93,17 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name', 'id')
     fields = ('id', 'name', 'measurement_unit',)
     readonly_fields = ('id',)
+
+@admin.register(IngredientInRecipe)
+class IngredientInRecipeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'recipe', 'ingredient', 'amount',)
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'recipe',)
+
+
+@admin.register(ShopingCart)
+class ShopingCartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'recipe',)

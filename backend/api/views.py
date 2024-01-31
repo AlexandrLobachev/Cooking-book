@@ -30,17 +30,38 @@ from .serializers import (
     UserSerializer,
     RecipeReadSerializer,
     RecipeWriteSerializer,
-    RecipeForExtraActionsSerializer,
     FollowSerializer,
+    FavoriteSerializer,
+    ShopingCartSerializer,
 )
 from .filters import RecipeFilter, IngredientFilter
-from .mixins import TagIngredientMixin, DelIntermediateObjMixin
+from .mixins import TagIngredientMixin
 
 User = get_user_model()
 
 
+def del_intermediate_obj(request, pk, model):
+    args_for_obj = {
+        Favorite: {'user': request.user, 'recipe': pk},
+        ShopingCart: {'user': request.user, 'recipe': pk},
+        Follow: {'user': request.user, 'following': pk},
+    }
+    messages = {
+        Favorite: 'Рецепт отсутствует в избранном!',
+        ShopingCart: 'Рецепт отсутствует в списке покупок!',
+        Follow: 'У вас нет подписки на этого блогера!',
+    }
+    queryset_objs = model.objects.all()
+    try:
+        obj = queryset_objs.get(**(args_for_obj.get(model)))
+    except queryset_objs.model.DoesNotExist as err:
+        raise ValidationError(messages.get(model)) from err
+    obj.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class IngredientViewSet(TagIngredientMixin):
-    '''Вывод ингредиентов.'''
+    """Вывод ингредиентов."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -49,13 +70,13 @@ class IngredientViewSet(TagIngredientMixin):
 
 
 class TagViewSet(TagIngredientMixin):
-    '''Вывод тегов.'''
+    """Вывод тегов."""
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
-class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
+class RecipeViewSet(ModelViewSet):
     """Вывод рецептов и корзины покупок."""
 
     queryset = Recipe.objects.all()
@@ -65,55 +86,58 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'patch', 'partial_update']:
+        if self.action in ('create', 'update', 'patch', 'partial_update',):
             return RecipeWriteSerializer
         return RecipeReadSerializer
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = Recipe.objects.select_related(
-                'author').prefetch_related(
-                'tags', 'recipeingredients__ingredient').annotate(
-                is_favorited=Exists(Favorite.objects.filter(
-                    recipe=OuterRef('pk'),
-                    user=self.request.user,
-                )),
-                is_in_shopping_cart=Exists(ShopingCart.objects.filter(
-                    recipe=OuterRef('pk'),
-                    user=self.request.user,
-                ))
-            )
-            return queryset
-        return Recipe.objects.all()
+        if not self.request.user.is_authenticated:
+            return Recipe.objects.all()
+        return Recipe.objects.select_related(
+            'author').prefetch_related(
+            'tags', 'recipeingredients__ingredient').annotate(
+            is_favorited=Exists(Favorite.objects.filter(
+                recipe=OuterRef('pk'),
+                user=self.request.user,
+            )),
+            is_in_shopping_cart=Exists(ShopingCart.objects.filter(
+                recipe=OuterRef('pk'),
+                user=self.request.user,
+            ))
+        )
 
     def add_recipe(self, request, pk, model):
         """Добавляет рецепт в избранное или в корзину покупок."""
-        queryset = self.get_queryset()
-        try:
-            recipe = queryset.get(pk=pk)
-        except queryset.model.DoesNotExist:
-            raise ValidationError('Рецепт не существует!')
-        if model.objects.filter(user=request.user, recipe=recipe):
-            raise ValidationError(
-                f'Рецепт уже добавлен в {model._meta.verbose_name}!'
+        map = {Favorite: FavoriteSerializer,
+               ShopingCart: ShopingCartSerializer,
+               }
+        data = {'user': request.user.pk, 'recipe': pk,}
+        context = {'request': request}
+        serializer = map.get(model)(data=data, context=context)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
-        model.objects.create(user=request.user, recipe=recipe)
-        serializer = RecipeForExtraActionsSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.save()
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
     def add_or_del_recipe(self, request, pk, model):
         """Добавляет или удаляет рецепт в избранное или список покупок."""
         if request.method == 'POST':
             return self.add_recipe(request, pk, model)
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             get_object_or_404(Recipe, pk=pk)
-            return self.del_intermediate_obj(request, pk, model)
+            return del_intermediate_obj(request, pk, model)
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         url_path='favorite',
-        permission_classes=[IsAuthenticated, ]
+        permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk):
         return self.add_or_del_recipe(
@@ -122,9 +146,9 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=('post', 'delete',),
         url_path='shopping_cart',
-        permission_classes=[IsAuthenticated, ]
+        permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk):
         return self.add_or_del_recipe(
@@ -133,9 +157,9 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
 
     @action(
         detail=False,
-        methods=['get', ],
+        methods=('get',),
         url_path='download_shopping_cart',
-        permission_classes=[IsAuthenticated, ]
+        permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
         """Формирует список покупок и возвращает txt файл в ответе."""
@@ -144,13 +168,12 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
             'ingredient__name', 'ingredient__measurement_unit').annotate(
             Sum('amount'))
         out = io.StringIO()
-        out.write('Список покупок:'"\n")
+        out.write('Список покупок:''\n')
         for row in list(shopping_cart):
-            out.write(
-                f'\n{row.get("ingredient__name").capitalize()} '
-                f'({row.get("ingredient__measurement_unit")}) - '
-                f'{row.get("amount__sum")}'
-            )
+            ingredient = row.get("ingredient__name").capitalize()
+            measurement_unit = row.get("ingredient__measurement_unit")
+            amount = row.get("amount__sum")
+            out.write(f'\n{ingredient}({measurement_unit}) - {amount}')
         content = out.getvalue()
         out.close()
         return HttpResponse(
@@ -163,7 +186,7 @@ class RecipeViewSet(ModelViewSet, DelIntermediateObjMixin):
         )
 
 
-class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
+class UserCustomViewSet(UserViewSet):
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -207,14 +230,6 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
         methods=('get',),
         permission_classes=(IsAuthenticated,),
     )
-    def me(self, request):
-        return super().me(request)
-
-    @action(
-        detail=False,
-        methods=('get',),
-        permission_classes=(IsAuthenticated,),
-    )
     def subscriptions(self, request):
         followings = self.get_followings(request).filter(
             following__user=self.request.user)
@@ -239,4 +254,4 @@ class UserCustomViewSet(UserViewSet, DelIntermediateObjMixin):
         following = get_object_or_404(User, pk=id)
         if request.method == 'POST':
             return self.add_subscribe(request, id, following)
-        return self.del_intermediate_obj(request, id, Follow)
+        return del_intermediate_obj(request, id, Follow)

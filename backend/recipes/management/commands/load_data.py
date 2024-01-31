@@ -18,14 +18,12 @@ class Command(BaseCommand):
     def json_to_dicts(self, file: str) -> list[dict]:
         """Возвращает список словарей, из JSON файла."""
         with open(file, encoding='utf-8') as json_file:
-            list_of_dicts = json.load(json_file)
-            return list_of_dicts
+            return json.load(json_file)
 
     def csv_to_dicts(self, file: str) -> list[dict]:
         """Возвращает список словарей из CSV файла."""
         with open(file, encoding='utf-8') as r_file:
             reader = csv.reader(r_file, delimiter=',')
-            print(reader)
             list_of_dicts = []
             for row in reader:
                 dict = {'name': row[0], 'measurement_unit': row[1]}
@@ -60,6 +58,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(
                 'Введен некоректный тип расширения. Только csv или json.')
-            exit()
+            return
         self.iterator(list_of_dicts)
         self.stdout.write(self.style.SUCCESS('Импорт завершен!'))

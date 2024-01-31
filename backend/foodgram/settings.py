@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', default=False)
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -121,7 +121,6 @@ STATIC_ROOT = BASE_DIR / 'collected_static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media'
 
-
 DJOSER = {
     'LOGIN_FIELD': 'email',
 
@@ -137,16 +136,3 @@ DJOSER = {
 
     'HIDE_USERS': False,
 }
-
-# LOGGING = {
-#     'version': 1,
-#     'handlers': {
-#         'console': {'class': 'logging.StreamHandler'},
-#     },
-#     'loggers': {
-#         'django.db.backends':{
-#             'handlers': ['console'],
-#             'level': 'DEBUG',
-#         }
-#     }
-# }
