@@ -18,11 +18,10 @@ services:
     env_file: .env
     volumes:
       - static:/backend_static
-      - media:/media
+      - media:/app/media
   frontend:
     env_file: .env
     image: alexandrlobachev/foodgram_frontend
-    command: cp -r /app/build/. /app/result_build/
     volumes:
       - static:/app/result_build/
   nginx:
