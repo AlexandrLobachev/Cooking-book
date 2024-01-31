@@ -94,6 +94,7 @@ class IngredientAdmin(admin.ModelAdmin):
     fields = ('id', 'name', 'measurement_unit',)
     readonly_fields = ('id',)
 
+
 @admin.register(IngredientInRecipe)
 class IngredientInRecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'recipe', 'ingredient', 'amount',)

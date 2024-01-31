@@ -54,7 +54,7 @@ docker compose exec backend python manage.py collectstatic
 ```
 Скопируйте статические файлы
 ```
-docker compose exec backend cp -r /app/collected_static/. /static/static/
+docker compose exec backend cp -r /app/collected_static/. /backend_static/static/
 ```
 Создать суперпользователя
 ```

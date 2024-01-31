@@ -23,4 +23,6 @@ class CurrentUserOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
             return True
         if '/users/me/' in request.path and not request.user.is_authenticated:
             return False
-        return request.method in permissions.SAFE_METHODS or currentuser.is_staff
+        return (request.method in permissions.SAFE_METHODS
+                or currentuser.is_staff)
+

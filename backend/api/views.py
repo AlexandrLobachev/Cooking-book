@@ -111,7 +111,7 @@ class RecipeViewSet(ModelViewSet):
         map = {Favorite: FavoriteSerializer,
                ShopingCart: ShopingCartSerializer,
                }
-        data = {'user': request.user.pk, 'recipe': pk,}
+        data = {'user': request.user.pk, 'recipe': pk, }
         context = {'request': request}
         serializer = map.get(model)(data=data, context=context)
         if not serializer.is_valid():
