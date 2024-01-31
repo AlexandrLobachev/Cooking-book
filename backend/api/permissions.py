@@ -25,4 +25,3 @@ class CurrentUserOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
             return False
         return (request.method in permissions.SAFE_METHODS
                 or currentuser.is_staff)
-
