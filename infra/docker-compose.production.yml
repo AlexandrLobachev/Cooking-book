@@ -22,7 +22,7 @@ services:
   frontend:
     image: alexandrlobachev/foodgram_frontend
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/app/result_build/
   nginx:
     depends_on:
       - backend
