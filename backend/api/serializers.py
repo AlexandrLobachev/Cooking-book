@@ -21,7 +21,7 @@ from recipes.models import (
     Recipe,
     IngredientInRecipe,
     Favorite,
-    ShoppingCart,
+    ShopingCart,
 )
 from users.models import Follow
 
@@ -149,6 +149,7 @@ class RecipeReadSerializer(ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True, source='recipeingredients'
     )
+    image = SerializerMethodField(read_only=True)
     is_favorited = BooleanField(read_only=True, default=False)
     is_in_shopping_cart = BooleanField(read_only=True, default=False)
 
@@ -166,6 +167,11 @@ class RecipeReadSerializer(ModelSerializer):
             'is_in_shopping_cart',
         )
         model = Recipe
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 
 class RecipeWriteSerializer(ModelSerializer):
@@ -280,11 +286,11 @@ class FavoriteSerializer(ModelSerializer):
         ).data
 
 
-class ShoppingCartSerializer(FavoriteSerializer):
+class ShopingCartSerializer(FavoriteSerializer):
 
     class Meta:
         fields = ('recipe', 'user',)
-        model = ShoppingCart
+        model = ShopingCart
         validators = [
             UniqueTogetherValidator(
                 queryset=model.objects.all(),

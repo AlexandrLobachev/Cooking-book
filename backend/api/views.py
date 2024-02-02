@@ -18,7 +18,7 @@ from recipes.models import (
     Tag,
     Recipe,
     Favorite,
-    ShoppingCart,
+    ShopingCart,
     IngredientInRecipe,
 )
 from .permissions import IsAuthorOrAdminOrReadOnly
@@ -75,7 +75,7 @@ class RecipeViewSet(ModelViewSet):
                 recipe=OuterRef('pk'),
                 user=self.request.user,
             )),
-            is_in_shopping_cart=Exists(ShoppingCart.objects.filter(
+            is_in_shopping_cart=Exists(ShopingCart.objects.filter(
                 recipe=OuterRef('pk'),
                 user=self.request.user,
             ))
@@ -108,7 +108,7 @@ class RecipeViewSet(ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         return self.add_or_del_recipe(
-            request, pk, ShoppingCart
+            request, pk, ShopingCart
         )
 
     @action(
@@ -120,7 +120,7 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Формирует список покупок и возвращает txt файл в ответе."""
         shopping_cart = IngredientInRecipe.objects.filter(
-            recipe__shoppingcart__user=self.request.user).values(
+            recipe__shopingcart__user=self.request.user).values(
             'ingredient__name', 'ingredient__measurement_unit').annotate(
             Sum('amount'))
         out = io.StringIO()

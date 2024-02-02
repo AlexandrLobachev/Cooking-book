@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 
 from recipes.admin import (
     FavoriteInline,
-    ShoppingCartInline
+    ShopingCartInline
 )
 from .models import Follow
 
@@ -30,7 +30,7 @@ class UserAdmin(DjangoUserAdmin):
     )
     inlines = (
         FavoriteInline,
-        ShoppingCartInline,
+        ShopingCartInline,
         FollowInline
     )
 

@@ -137,7 +137,7 @@ class Favorite(UserRecipeModel):
             )]
 
 
-class ShoppingCart(UserRecipeModel):
+class ShopingCart(UserRecipeModel):
 
     class Meta:
         verbose_name = 'рецепт в список покупок'

@@ -3,10 +3,10 @@ from rest_framework import status
 from rest_framework.serializers import ValidationError
 
 from users.models import Follow
-from recipes.models import Favorite, ShoppingCart
+from recipes.models import Favorite, ShopingCart
 from .serializers import (
     FavoriteSerializer,
-    ShoppingCartSerializer,
+    ShopingCartSerializer,
     SubscribeSerializer,
 )
 
@@ -14,12 +14,12 @@ from .serializers import (
 def del_intermediate_obj(request, pk, model):
     args_for_obj = {
         Favorite: {'user': request.user, 'recipe': pk},
-        ShoppingCart: {'user': request.user, 'recipe': pk},
+        ShopingCart: {'user': request.user, 'recipe': pk},
         Follow: {'user': request.user, 'following': pk},
     }
     messages = {
         Favorite: 'Рецепт отсутствует в избранном!',
-        ShoppingCart: 'Рецепт отсутствует в списке покупок!',
+        ShopingCart: 'Рецепт отсутствует в списке покупок!',
         Follow: 'У вас нет подписки на этого блогера!',
     }
     obj = model.objects.filter(**(args_for_obj.get(model)))
@@ -31,7 +31,7 @@ def del_intermediate_obj(request, pk, model):
 
 def add_intermediate_obj(request, pk, model):
     map = {Favorite: (FavoriteSerializer, 'recipe'),
-           ShoppingCart: (ShoppingCartSerializer, 'recipe'),
+           ShopingCart: (ShopingCartSerializer, 'recipe'),
            Follow: (SubscribeSerializer, 'following'),
            }
     data = {'user': request.user.pk, map.get(model)[1]: pk, }
