@@ -36,5 +36,5 @@ class UserAdmin(DjangoUserAdmin):
 
 
 @admin.register(Follow)
-class ShopingCartAdmin(admin.ModelAdmin):
+class FollowAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'following',)

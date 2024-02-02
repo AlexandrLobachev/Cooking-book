@@ -5,7 +5,7 @@ from .models import (
     Ingredient,
     Tag,
     Favorite,
-    ShopingCart,
+    ShoppingCart,
     IngredientInRecipe
 )
 
@@ -66,7 +66,7 @@ class FavoriteInline(admin.TabularInline):
 
 
 class ShoppingCartInline(admin.TabularInline):
-    model = ShopingCart
+    model = ShoppingCart
     extra = 0
     fields = (
         'recipe',
@@ -105,6 +105,6 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe',)
 
 
-@admin.register(ShopingCart)
-class ShopingCartAdmin(admin.ModelAdmin):
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe',)

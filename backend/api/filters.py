@@ -1,7 +1,8 @@
 from django_filters.rest_framework import (
     FilterSet,
     AllValuesMultipleFilter,
-    BooleanFilter
+    BooleanFilter,
+    CharFilter
 )
 from django.contrib.auth import get_user_model
 
@@ -28,6 +29,7 @@ class RecipeFilter(FilterSet):
 
 
 class IngredientFilter(FilterSet):
+    name = CharFilter(lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient

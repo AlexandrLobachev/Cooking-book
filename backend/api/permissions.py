@@ -12,16 +12,9 @@ class IsAuthorOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
 
 class CurrentUserOrAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
 
-    def has_permission(self, request, view):
-        if '/users/me/' in request.path and not request.user.is_authenticated:
-            return False
-        return True
-
     def has_object_permission(self, request, view, user):
         currentuser = request.user
         if user == currentuser:
             return True
-        if '/users/me/' in request.path and not request.user.is_authenticated:
-            return False
         return (request.method in permissions.SAFE_METHODS
                 or currentuser.is_staff)
