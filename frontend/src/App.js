@@ -121,7 +121,8 @@ function App() {
       })
   }
 
-  useEffect(_ => {
+   useEffect(_ => {
+    alert('loggedIn = ', loggedIn)
     if (loggedIn) {
       // history.push('/recipes')
     }
