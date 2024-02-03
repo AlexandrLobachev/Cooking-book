@@ -122,7 +122,7 @@ function App() {
   }
 
    useEffect(_ => {
-    alert('loggedIn = ', loggedIn)
+    console.log('loggedIn = ', loggedIn)
     if (loggedIn) {
       // history.push('/recipes')
     }
