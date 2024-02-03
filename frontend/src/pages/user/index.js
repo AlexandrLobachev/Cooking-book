@@ -97,7 +97,7 @@ const UserPage = ({ updateOrders, loggedIn }) => {
           }}
         />
       </div>
-      {(((userContext || {}).id !== (user || {}).id) || loggedIn) && <Button
+      {loggedIn && <Button
         className={styles.buttonSubscribe}
         clickHandler={_ => {
           const method = subscribed ? api.deleteSubscriptions.bind(api) : api.subscribe.bind(api) 
