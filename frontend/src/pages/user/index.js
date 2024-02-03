@@ -17,7 +17,7 @@ import { useParams, useHistory } from 'react-router-dom'
 import { UserContext } from '../../contexts'
 import MetaTags from 'react-meta-tags'
 
-const UserPage = ({ updateOrders }) => {
+const UserPage = ({ updateOrders, loggedIn }) => {
   const {
     recipes,
     setRecipes,
@@ -97,7 +97,7 @@ const UserPage = ({ updateOrders }) => {
           }}
         />
       </div>
-      {(userContext || {}).id !== (user || {}).id && <Button
+      {(((userContext || {}).id !== (user || {}).id) || loggedIn) && <Button
         className={styles.buttonSubscribe}
         clickHandler={_ => {
           const method = subscribed ? api.deleteSubscriptions.bind(api) : api.subscribe.bind(api) 
