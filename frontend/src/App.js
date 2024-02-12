@@ -121,8 +121,7 @@ function App() {
       })
   }
 
-   useEffect(_ => {
-    console.log('loggedIn = ', loggedIn)
+  useEffect(_ => {
     if (loggedIn) {
       // history.push('/recipes')
     }
@@ -183,7 +182,7 @@ function App() {
         </div>
         <Header orders={orders} loggedIn={loggedIn} onSignOut={onSignOut} />
         <Switch>
-          <Route
+          <ProtectedRoute
             exact
             path='/user/:id'
             component={User}
