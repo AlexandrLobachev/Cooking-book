@@ -1,5 +1,5 @@
-#  Foodgram
-![workflow](https://github.com/AlexandrLobachev/foodgram-project-react/actions/workflows/main.yml/badge.svg)
+#  Cooking Book
+![workflow](https://github.com/AlexandrLobachev/cooking-book/actions/workflows/main.yml/badge.svg)
 
 ## Описание
 
@@ -24,16 +24,16 @@ Python, Django, DRF, Nginx, Docker, Gunicorn, Github Actions
 
 Клонировать репозиторий и перейти в него в командной строке:
 ```
-git clone git@github.com:AlexandrLobachev/foodgram-project-react.git
+git clone git@github.com:AlexandrLobachev/cooking-book.git
 ```
 ```
-cd foodgram-project-react
+cd cooking-book
 ```
 Создать файл .env и заполнить его(пример пример заполнения можно взять ниже):
 ```
-POSTGRES_DB=foodgram
-POSTGRES_USER=foodgram_user
-POSTGRES_PASSWORD=foodgram_password
+POSTGRES_DB=cookbook
+POSTGRES_USER=cookbook_user
+POSTGRES_PASSWORD=cookbook_password
 DB_HOST=db
 DB_PORT=5432
 SECRET_KEY='django-insecure-token-example3*$vmxm4)abgjw8000000000000000000000000'
